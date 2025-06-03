@@ -45,6 +45,44 @@ class StereoCalibrator:
 
         return K, D, ret
 
+    @staticmethod
+    def _calibrate_stereo_relationship(obj_points, img_points_l, img_points_r, K1, D1, K2, D2, img_size):
+        """
+        在已知各自内参的情况下，计算双目相机之间的旋转和平移。
+        :param obj_points: 世界坐标系下的点
+        :param img_points_l: 左摄像头图像上的角点
+        :param img_points_r: 右摄像头图像上的角点
+        :param K1:
+        :param D1:
+        :param K2:
+        :param D2:
+        :param img_size: 图像尺寸（width, height）
+        :return:
+        """
+        print("\nPerforming stereo calibration to find the relationship between cameras...")
+
+        # 核心：使用 CALIB_FIX_INTRINSIC 标志，告诉函数不要再重新计算内参了！
+        flags = cv2.CALIB_FIX_INTRINSIC
+
+        ret, K1, D1, K2, D2, R, T, E, F = cv2.stereoCalibrate(
+            obj_points, img_points_l, img_points_r,
+            K1, D1,  # 将我们单目标定得到的精确内参传入
+            K2, D2,  # 将我们单目标定得到的精确内参传入
+            img_size,
+            flags=flags,
+            criteria=config.STEREO_CALIB_CRITERIA  # 可以和单目标定的 criteria 不同
+        )
+
+        assert ret < 1.0, f"Stereo calibration reprojection error is too high: {ret}"
+        print(f"  - Stereo relationship calibrated with reprojection error: {ret}")
+
+        # 将所有最终参数打包
+        stereo_params = {
+            "K1": K1, "D1": D1, "K2": K2, "D2": D2,
+            "R": R, "T": T, "E": E, "F": F, "reprojection_error": ret
+        }
+        return stereo_params
+
     def _find_corners_in_all_images(self, image_dir: str):
         """ 存储检测到的角点"""
         object_points = []  # 存储世界坐标
