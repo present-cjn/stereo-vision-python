@@ -28,8 +28,8 @@ class StereoCalibrator:
         left_image_path_pattern = os.path.join(image_dir, 'leftPic*.jpg')
         right_image_path_pattern = os.path.join(image_dir, 'rightPic*.jpg')
 
-        images_left = sorted(glob.glob(left_image_path_pattern))
-        images_right = sorted(glob.glob(right_image_path_pattern))
+        images_left = sorted(glob.glob(left_image_path_pattern), key=file_utils.natural_sort_key)
+        images_right = sorted(glob.glob(right_image_path_pattern), key=file_utils.natural_sort_key)
 
         assert len(images_left) == len(images_right), "Number of left and right images must be equal"
 
