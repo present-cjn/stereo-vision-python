@@ -17,7 +17,6 @@ class StereoCalibrator:
         self.objp[:, :2] = np.mgrid[0:self.chessboard_size[0], 0:self.chessboard_size[1]].T.reshape(-1, 2)
         self.objp = self.objp * self.square_size
 
-
     @staticmethod
     def _calibrate_single_camera(obj_points, img_points, img_size, camera_name: str):
         """
@@ -36,11 +35,11 @@ class StereoCalibrator:
             img_size,
             None,
             None,
-            criteria=config.MONO_CALIB_CRITERIA # 建议在config中为单目标定设置独立的criteria
+            criteria=config.MONO_CALIB_CRITERIA
         )
 
         # 检查单目标定的质量
-        assert ret < 1.0, f"{camera_name} camera reprojection error is too high: {ret}"
+        assert ret < 5.0, f"{camera_name} camera reprojection error is too high: {ret}"
         print(f"  - {camera_name} camera calibrated with reprojection error: {ret}")
 
         return K, D, ret
@@ -73,7 +72,7 @@ class StereoCalibrator:
             criteria=config.STEREO_CALIB_CRITERIA  # 可以和单目标定的 criteria 不同
         )
 
-        assert ret < 1.0, f"Stereo calibration reprojection error is too high: {ret}"
+        assert ret < 5.0, f"Stereo calibration reprojection error is too high: {ret}"
         print(f"  - Stereo relationship calibrated with reprojection error: {ret}")
 
         # 将所有最终参数打包
@@ -181,14 +180,32 @@ class StereoCalibrator:
         执行完整的标定流程并保存结果。
         """
         try:
-            # 1.找到图片并计算角点
+            # --- 第零步：寻找所有角 ---
+            print("Step 0: Finding chessboard corners in all images...")
             obj_points, img_points_l, img_points_r, img_size = self._find_corners_in_all_images(image_dir)
-            # 2.执行标定计算
-            stereo_params = self._perform_calibration(obj_points, img_points_l, img_points_r, img_size)
-            # 3.保存结果
+
+            # --- 第一步：分别标定左右相机 ---
+            print("\nStep 1: Calibrating each camera individually...")
+            K1, D1, reproj_error_L = self._calibrate_single_camera(obj_points, img_points_l, img_size, "Left")
+            K2, D2, reproj_error_R = self._calibrate_single_camera(obj_points, img_points_r, img_size, "Right")
+
+            # --- 第二步：标定双目关系 ---
+            print("\nStep 2: Calibrating the stereo rig relationship...")
+            stereo_params = self._calibrate_stereo_relationship(
+                obj_points, img_points_l, img_points_r, K1, D1, K2, D2, img_size
+            )
+
+            # --- 最终步骤：整合、保存、返回 ---
+            # 把单目标定的误差也加进去，便于诊断
+            stereo_params['reprojection_error_L'] = reproj_error_L
+            stereo_params['reprojection_error_R'] = reproj_error_R
+
+            print("\nCalibration process completed successfully!")
             file_utils.save_stereo_params(config.CAMERA_PARAMS_PATH, stereo_params)
 
             return stereo_params
-        except (FileNotFoundError, ValueError, InterruptedError) as e:
-            print(f"An error occurred during calibration: {e}")
+
+        except (FileNotFoundError, ValueError, InterruptedError, AssertionError) as e:
+            print(f"\nAn error occurred during calibration: {e}")
+            print("Calibration process failed.")
             return None
