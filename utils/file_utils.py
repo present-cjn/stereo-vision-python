@@ -1,4 +1,5 @@
 import cv2
+import re
 
 
 def save_stereo_params(path, stereo_params):
@@ -33,3 +34,10 @@ def load_stereo_params(path):
     fs.release()
     print(f"Stereo parameters loaded from {path}")
     return params
+
+
+def natural_sort_key(s):
+    """
+    一个用于 sorted() 函数的 key 函数，实现自然排序。
+    """
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
