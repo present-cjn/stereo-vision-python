@@ -17,6 +17,34 @@ class StereoCalibrator:
         self.objp[:, :2] = np.mgrid[0:self.chessboard_size[0], 0:self.chessboard_size[1]].T.reshape(-1, 2)
         self.objp = self.objp * self.square_size
 
+
+    @staticmethod
+    def _calibrate_single_camera(obj_points, img_points, img_size, camera_name: str):
+        """
+        单目标定函数
+        :param obj_points: 世界坐标系下的点
+        :param img_points: 图像上的角点
+        :param img_size: 图像尺寸（width, height）
+        :param camera_name: 用于打印日志的相机名字 (e.g., "Left" or "Right")。
+        :return:一个包含 K, D, 和重投影误差的元组。
+        """
+        print(f"\nPerforming monocular calibration for {camera_name} camera...")
+
+        ret, K, D, rvecs, tvecs = cv2.calibrateCamera(
+            obj_points,
+            img_points,
+            img_size,
+            None,
+            None,
+            criteria=config.MONO_CALIB_CRITERIA # 建议在config中为单目标定设置独立的criteria
+        )
+
+        # 检查单目标定的质量
+        assert ret < 1.0, f"{camera_name} camera reprojection error is too high: {ret}"
+        print(f"  - {camera_name} camera calibrated with reprojection error: {ret}")
+
+        return K, D, ret
+
     def _find_corners_in_all_images(self, image_dir: str):
         """ 存储检测到的角点"""
         object_points = []  # 存储世界坐标
