@@ -68,6 +68,16 @@ class StereoCalibrator:
             # 转换为灰度图
             gray_left = cv2.cvtColor(image_left, cv2.COLOR_BGR2GRAY)
             gray_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2GRAY)
+            """获取image_size并判断所有图片尺寸"""
+            if image_size is None:
+                image_size = gray_left.shape[::-1]
+
+            assert gray_left.shape[::-1] == image_size, \
+                f"Image size mismatch! Expected {image_size}, but got {gray_left.shape[::-1]} in {image_left}"
+
+            assert gray_right.shape[::-1] == image_size, \
+                f"Image size mismatch! Expected {image_size}, but got {gray_right.shape[::-1]} in {image_right}"
+
             # 查找棋盘格角点
             ret_left, corners_left = cv2.findChessboardCorners(gray_left, self.chessboard_size, None)
             ret_right, corners_right = cv2.findChessboardCorners(gray_right, self.chessboard_size, None)
@@ -96,7 +106,8 @@ class StereoCalibrator:
 
         if not object_points:
             raise ValueError("Could not find chessboard corners in any of the image pairs.")
-
+        if image_size is None:
+            raise ValueError("Could not determine image size. No valid images found.")
         return object_points, image_points_left, image_points_right, image_size
 
     @staticmethod
