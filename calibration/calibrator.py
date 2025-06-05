@@ -133,9 +133,8 @@ class StereoCalibrator:
             # 如果左右图像都成功找到了角点
             if ret_left and ret_right:
                 # 亚像素精度优化
-                criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-                corners_left_subpix = cv2.cornerSubPix(gray_left, corners_left, (11, 11), (-1, -1), criteria)
-                corners_right_subpix = cv2.cornerSubPix(gray_right, corners_right, (11, 11), (-1, -1), criteria)
+                corners_left_subpix = cv2.cornerSubPix(gray_left, corners_left, (11, 11), (-1, -1), criteria=config.SUBPIX_CRITERIA)
+                corners_right_subpix = cv2.cornerSubPix(gray_right, corners_right, (11, 11), (-1, -1), criteria=config.SUBPIX_CRITERIA)
 
                 object_points.append(self.objp)
                 image_points_left.append(corners_left_subpix)
@@ -161,7 +160,7 @@ class StereoCalibrator:
             cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2,
             image_size, R=None, T=None,
             flags=cv2.CALIB_USE_INTRINSIC_GUESS,  # Or cv2.CALIB_FIX_INTRINSIC if you have pre-calibrated values
-            criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 1e-5)
+            criteria=config.STEREO_CALIB_CRITERIA
         )
         assert K1.shape == (3, 3), "K1 matrix shape is incorrect!"
         assert R.shape == (3, 3), "R rotation matrix shape is incorrect!"
