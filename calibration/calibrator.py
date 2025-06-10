@@ -82,24 +82,15 @@ class StereoCalibrator:
         }
         return stereo_params
 
-    def _find_corners_in_all_images(self, image_dir: str):
+    def _find_corners_in_all_images(self, image_pairs: list):
         """ 存储检测到的角点"""
         object_points = []  # 存储世界坐标
         image_points_left = []  # 存储左相机图像点
         image_points_right = []  # 存储右相机图像点
         image_size = None  # 将在第一张有效图片中获取
 
-        """加载图片"""
-        left_image_path_pattern = os.path.join(image_dir, 'leftPic*.jpg')
-        right_image_path_pattern = os.path.join(image_dir, 'rightPic*.jpg')
-
-        images_left = sorted(glob.glob(left_image_path_pattern), key=file_utils.natural_sort_key)
-        images_right = sorted(glob.glob(right_image_path_pattern), key=file_utils.natural_sort_key)
-
-        assert len(images_left) == len(images_right), "Number of left and right images must be equal"
-
         """遍历图像找角点"""
-        for left_image_path, right_image_path in zip(images_left, images_right):
+        for left_image_path, right_image_path in image_pairs:
             image_left = cv2.imread(left_image_path)
             image_right = cv2.imread(right_image_path)
             # 转换为灰度图
@@ -174,14 +165,27 @@ class StereoCalibrator:
         }
         return stereo_params
 
-    def run(self, image_dir: str):
+    def run(self, image_source):
         """
         执行完整的标定流程并保存结果。
+        image_source (str or list): 如果是字符串，则视为目录路径；
+                                    如果是列表，则视为图片对的列表。
         """
         try:
+            if isinstance(image_source, str): # 传入的是目录
+                """加载图片"""
+                images_left = sorted(glob.glob(os.path.join(image_source, 'leftPic*.jpg')), key=file_utils.natural_sort_key)
+                images_right = sorted(glob.glob(os.path.join(image_source, 'rightPic*.jpg')), key=file_utils.natural_sort_key)
+                assert len(images_left) == len(images_right), "Number of left and right images must be equal"
+                image_pairs = list(zip(images_left, images_right))
+            elif isinstance(image_source, list): # 传入的是列表
+                image_pairs = image_source
+            else:
+                raise TypeError("image_source must be a directory path (str) or a list of pairs.")
+
             # --- 第零步：寻找所有角 ---
             print("Step 0: Finding chessboard corners in all images...")
-            obj_points, img_points_l, img_points_r, img_size = self._find_corners_in_all_images(image_dir)
+            obj_points, img_points_l, img_points_r, img_size = self._find_corners_in_all_images(image_pairs)
 
             # --- 第一步：分别标定左右相机 ---
             print("\nStep 1: Calibrating each camera individually...")
