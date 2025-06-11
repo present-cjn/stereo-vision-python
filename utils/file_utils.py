@@ -1,6 +1,9 @@
 import cv2
+import re
 
-
+# TODO(cjn): Refactor this to use a Pydantic model for data validation.
+# This will prevent silent errors from malformed or type-incorrect data in the YAML file.
+# This should be addressed after the two-step calibration logic is complete.
 def save_stereo_params(path, stereo_params):
     """
     使用 OpenCV 的 FileStorage 保存双目标定参数。
@@ -29,7 +32,27 @@ def load_stereo_params(path):
     # 动态读取所有节点
     root = fs.root()
     for key in root.keys():
-        params[key] = fs.getNode(key).mat()
+        node = fs.getNode(key)
+        if node.isReal():
+            params[key] = node.real()
+            if node.isInt():
+                params[key] = int(params[key])
+
+        elif node.isString():
+            params[key] = node.string()
+
+        elif node.isNone():
+            params[key] = None
+
+        else:
+            params[key] = fs.getNode(key).mat()
     fs.release()
     print(f"Stereo parameters loaded from {path}")
     return params
+
+
+def natural_sort_key(s):
+    """
+    一个用于 sorted() 函数的 key 函数，实现自然排序。
+    """
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
