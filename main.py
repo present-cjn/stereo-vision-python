@@ -33,9 +33,8 @@ def handle_run_application():
         return
 
     print("Loading test images...")
-    test_source = config.TEST_IMAGE_DIR
-    left_img = cv2.imread(os.path.join(test_source, 'leftPic.jpg'))
-    right_img = cv2.imread(os.path.join(test_source, 'rightPic.jpg'))
+    left_img = cv2.imread(config.TEST_IMAGE_LEFT_PATH)
+    right_img = cv2.imread(config.TEST_IMAGE_RIGHT_PATH)
     if left_img is None or right_img is None:
         print("Error: Could not load test images. Please check the paths in config.py.")
         return

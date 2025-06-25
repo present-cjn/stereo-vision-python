@@ -6,7 +6,12 @@ import cv2
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 CALIBRATION_IMAGE_DIR = os.path.join(PROJECT_ROOT, "data/calibration_images/")
+
+# 定义测试图片路径
 TEST_IMAGE_DIR = os.path.join(PROJECT_ROOT, "data/test_images/")
+TEST_IMAGE_LEFT_PATH = os.path.join(TEST_IMAGE_DIR, "leftPic.jpg")
+TEST_IMAGE_RIGHT_PATH = os.path.join(TEST_IMAGE_DIR,"rightPic.jpg")
+
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output/")
 CAMERA_PARAMS_PATH = os.path.join(OUTPUT_DIR, "stereo_params.yml")
 
