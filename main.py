@@ -2,6 +2,11 @@ import config
 import os
 from calibration.calibrator import StereoCalibrator
 import argparse
+from utils import file_utils, image_utils
+import cv2
+from visualization import visualizer
+from processing.stereo_matcher import StereoMatcher
+
 
 
 def setup_environment():
@@ -21,12 +26,42 @@ def handle_calibration():
 
 def handle_run_application():
     """处理核心应用（立体匹配等）任务的函数"""
-    print("\n--- Running Main Application ---")
-    # TODO: 下一步要填充的立体匹配流程
-    print("Loading stereo parameters...")
+    print("Loading calibration parameters...")
+    stereo_params = file_utils.load_stereo_params(config.CAMERA_PARAMS_PATH)
+    if stereo_params is None:
+        print(f"Error: Calibration parameters not found at {config.CAMERA_PARAMS_PATH}. Please run the 'calibrate' command first.")
+        return
+
     print("Loading test images...")
+    test_source = config.TEST_IMAGE_DIR
+    left_img = cv2.imread(os.path.join(test_source, 'leftPic.jpg'))
+    right_img = cv2.imread(os.path.join(test_source, 'rightPic.jpg'))
+    if left_img is None or right_img is None:
+        print("Error: Could not load test images. Please check the paths in config.py.")
+        return
+
     print("Performing stereo matching...")
-    print("\nMain application task finished.")
+    left_rectified, right_rectified, Q = image_utils.rectify_stereo_pair(left_img, right_img, stereo_params)
+
+    # 增加一个可视化步骤，来检查校正效果
+    if config.VISUALIZE_STEPS:
+        # 这个函数需要你添加到 visualizer.py 中
+        visualizer.show_rectified_pair(left_rectified, right_rectified)
+
+    # 创建匹配器并计算视差图
+    print("Computing disparity map...")
+    matcher = StereoMatcher() # Matcher会从config加载SGBM参数
+    disparity_map = matcher.compute_disparity(left_rectified, right_rectified)
+
+    # 5. 可视化最终的视差图
+    print("Visualizing disparity map...")
+    visualizer.show_disparity_map(
+        disparity_map,
+        config.SGBM_MIN_DISPARITY,
+        config.SGBM_NUM_DISPARITIES
+    )
+
+    print("\nStereo matching application finished successfully.")
 
 
 def main():
