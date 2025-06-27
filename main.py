@@ -24,7 +24,7 @@ def handle_calibration():
     calibrator.run(config.CALIBRATION_IMAGE_DIR)
     print("\nCalibration task finished.")
 
-def handle_run_application():
+def handle_run_application(args):
     """处理核心应用（立体匹配等）任务的函数"""
     print("Loading calibration parameters...")
     stereo_params = file_utils.load_stereo_params(config.CAMERA_PARAMS_PATH)
@@ -65,16 +65,36 @@ def handle_run_application():
     # --- 三维重建 ---
     print("\n--- Performing 3D Reconstruction ---")
     reconstructor = Reconstructor()
-    points_3D, colors = reconstructor.reconstruct(disparity_map, left_rectified, Q)
+    # 接收两种返回结果
+    points_3D_matrix, (points_filtered, colors_filtered) = reconstructor.reconstruct(disparity_map, left_rectified, Q)
 
-    # --- 保存点云 ---
+    # --- 保存点云 (使用过滤后的数据) ---
     print("\n--- Saving Point Cloud ---")
-    file_utils.save_point_cloud(config.POINT_CLOUD_PATH, points_3D, colors)
+    # (可选) 在这里进行降采样
+    downsample_factor = config.POINT_CLOUD_DOWNSAMPLE_FACTOR
+    if downsample_factor > 1:
+        points_to_save = points_filtered[::downsample_factor]
+        colors_to_save = colors_filtered[::downsample_factor]
+    else:
+        points_to_save = points_filtered
+        colors_to_save = colors_filtered
 
-    # --- 可视化点云 ---
-    if config.VISUALIZE_STEPS:
-        print("\n--- Visualizing Point Cloud ---")
+    file_utils.save_point_cloud(config.POINT_CLOUD_PATH, points_to_save, colors_to_save)
+
+    # --- 可视化 ---
+    print(f"\n--- Visualizing Output (Mode: {args.output}) ---")
+    if args.output == 'point_cloud':
         visualizer.show_point_cloud(config.POINT_CLOUD_PATH)
+    elif args.output == 'depth_map':
+        # --- 核心修正：使用原始的、未经过滤的 3D 矩阵 ---
+        # 现在它已经是 HxWx3 的形状了，不再需要 reshape！
+        visualizer.show_interactive_depth_map(
+            disparity_map,
+            left_rectified,
+            points_3D_matrix,  # <--- 直接使用这个 HxWx3 的矩阵
+            config.SGBM_MIN_DISPARITY,
+            config.SGBM_NUM_DISPARITIES
+        )
 
     print("\nFull stereo vision pipeline finished successfully.")
 
@@ -91,6 +111,14 @@ def main():
 
     # 创建 'run' 命令
     parser_run = subparsers.add_parser('run', help='Run the main stereo matching application using existing calibration.')
+    # 添加一个 --output 参数，让用户选择输出模式
+    parser_run.add_argument(
+        '--output',
+        type=str,
+        default='depth_map',  # 默认显示交互式深度图
+        choices=['depth_map', 'point_cloud'], # 可选值为 'depth_map' 或 'point_cloud'
+        help="Specify the final visualization output."
+    )
     parser_run.set_defaults(func=handle_run_application)
 
     # 解析命令行参数
@@ -98,7 +126,10 @@ def main():
 
     # --- 根据解析出的命令，调用对应的处理函数 ---
     setup_environment()
-    args.func()
+    if args.command == 'run':
+        args.func(args)
+    else:
+        args.func()
 
 if __name__ == "__main__":
     main()
