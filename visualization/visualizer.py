@@ -26,10 +26,7 @@ def display_chessboard_corners(image_left, ret_left, corners_left,
     cv2.imshow(window_name, display_image)
 
     print("Press any key to continue to the next pair, or 'q' to quit.")
-    key = cv2.waitKey(0)  # 无限期等待按键
-
-    # 在调用后关闭窗口，避免窗口堆叠
-    cv2.destroyWindow(window_name)
+    key = _wait_for_key_or_window_close(window_name)
 
     return key
 
@@ -50,11 +47,10 @@ def show_disparity_map(disparity_map, min_disp, num_disp):
     # 应用伪彩色映射，使其更易于观察
     colormap_disp = cv2.applyColorMap(disp_to_show, cv2.COLORMAP_JET)
 
-    cv2.imshow("Disparity Map", colormap_disp)
-    print("Press any key to close the disparity map.")
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    window_name = "Disparity Map"
+    cv2.imshow(window_name, colormap_disp)
 
+    _wait_for_key_or_window_close(window_name)
 
 def show_rectified_pair(left_rectified, right_rectified):
     """
@@ -73,7 +69,36 @@ def show_rectified_pair(left_rectified, right_rectified):
         y = int(h / 10 * i)
         cv2.line(combined_image, (0, y), (w * 2, y), (0, 255, 0), 1)
 
-    cv2.imshow("Rectified Stereo Pair", combined_image)
-    print("Press any key to close the rectified view.")
-    cv2.waitKey(0)
-    cv2.destroyWindow("Rectified Stereo Pair")
+    window_name = "Rectified Stereo Pair"
+    cv2.imshow(window_name, combined_image)
+
+    _wait_for_key_or_window_close(window_name)
+
+# --- Internal Helper Functions ---
+def _wait_for_key_or_window_close(window_name):
+    """
+    [内部辅助函数] 等待用户按键或关闭指定窗口。
+    """
+    print(f"Displaying window '{window_name}'. Press any key or close the window to continue.")
+
+    key_pressed = -1 # 默认值，表示没有有效按键
+
+    while True:
+        key = cv2.waitKey(1) & 0xFF
+
+        if key != 255:
+            key_pressed = key
+            break
+
+        try:
+            if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) < 1:
+                key_pressed = -1
+                break
+        except cv2.error:
+            # 当窗口被非常快地关闭时，getWindowProperty 可能会在窗口对象销毁后被调用，导致OpenCV错误。
+            # 捕获这个错误并安全地退出循环。
+            key_pressed = -1
+            break
+
+    cv2.destroyWindow(window_name)
+    return key_pressed
