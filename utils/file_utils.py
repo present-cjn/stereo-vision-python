@@ -1,5 +1,6 @@
 import cv2
 import re
+import open3d as o3d
 
 # TODO(cjn): Refactor this to use a Pydantic model for data validation.
 # This will prevent silent errors from malformed or type-incorrect data in the YAML file.
@@ -50,6 +51,15 @@ def load_stereo_params(path):
     print(f"Stereo parameters loaded from {path}")
     return params
 
+def save_point_cloud(path, points_3D, colors):
+    """使用 Open3D 将点云保存为 .ply 文件。"""
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points_3D)
+    # Open3D 需要的颜色值是 0-1 范围的浮点数
+    pcd.colors = o3d.utility.Vector3dVector(colors / 255.0)
+
+    o3d.io.write_point_cloud(path, pcd)
+    print(f"Point cloud saved to {path}")
 
 def natural_sort_key(s):
     """
