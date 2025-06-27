@@ -111,7 +111,7 @@ class StereoCalibrator:
             ret_left, corners_left = cv2.findChessboardCorners(gray_left, self.chessboard_size, flags=find_flags_l)
             ret_right, corners_right = cv2.findChessboardCorners(gray_right, self.chessboard_size, None)
 
-            if config.VISUALIZE_STEPS:
+            if config.VERBOSE_MODE:
                 key = visualizer.display_chessboard_corners(
                     image_left, ret_left, corners_left,
                     image_right, ret_right, corners_right,

@@ -43,7 +43,7 @@ def handle_run_application(args):
     left_rectified, right_rectified, Q = image_utils.rectify_stereo_pair(left_img, right_img, stereo_params)
 
     # 增加一个可视化步骤，来检查校正效果
-    if config.VISUALIZE_STEPS:
+    if config.VERBOSE_MODE:
         # 这个函数需要你添加到 visualizer.py 中
         visualizer.show_rectified_pair(left_rectified, right_rectified)
 
@@ -53,12 +53,13 @@ def handle_run_application(args):
     disparity_map = matcher.compute_disparity(left_rectified, right_rectified)
 
     # 可视化最终的视差图
-    print("Visualizing disparity map...")
-    visualizer.show_disparity_map(
-        disparity_map,
-        config.SGBM_MIN_DISPARITY,
-        config.SGBM_NUM_DISPARITIES
-    )
+    if config.VERBOSE_MODE:
+        print("Visualizing disparity map...")
+        visualizer.show_disparity_map(
+            disparity_map,
+            config.SGBM_MIN_DISPARITY,
+            config.SGBM_NUM_DISPARITIES
+        )
 
     print("\nStereo matching application finished successfully.")
 
@@ -95,12 +96,22 @@ def handle_run_application(args):
             config.SGBM_MIN_DISPARITY,
             config.SGBM_NUM_DISPARITIES
         )
+    elif args.output == 'none':
+        print("Final visualization skipped as per '--output none' option.")
 
     print("\nFull stereo vision pipeline finished successfully.")
 
 
 def main():
     parser = argparse.ArgumentParser(description="A Stereo Vision Project.")
+
+    # --- 定义全局参数---
+    # 这个参数现在对所有子命令都有效。
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help="Enable verbose mode to show intermediate visualization steps for any task."
+    )
 
     # 创建子命令解析器
     subparsers = parser.add_subparsers(dest='command', help='Available commands', required=True)
@@ -113,16 +124,21 @@ def main():
     parser_run = subparsers.add_parser('run', help='Run the main stereo matching application using existing calibration.')
     # 添加一个 --output 参数，让用户选择输出模式
     parser_run.add_argument(
-        '--output',
+        '-o', '--output',
         type=str,
-        default='depth_map',  # 默认显示交互式深度图
-        choices=['depth_map', 'point_cloud'], # 可选值为 'depth_map' 或 'point_cloud'
-        help="Specify the final visualization output."
+        default='depth_map',
+        choices=['depth_map', 'point_cloud', 'none'], # 'none' 表示只计算和保存，不显示最终结果
+        help="Specify the final visualization output type. Default is 'depth_map'."
     )
     parser_run.set_defaults(func=handle_run_application)
 
     # 解析命令行参数
     args = parser.parse_args()
+
+    # --- 根据命令行参数，设置全局的配置状态 ---
+    if args.verbose:
+        config.VERBOSE_MODE = True
+        print("Verbose mode is enabled.")
 
     # --- 根据解析出的命令，调用对应的处理函数 ---
     setup_environment()

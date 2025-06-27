@@ -25,8 +25,8 @@ SQUARE_SIZE_MM = 20        # 棋盘格尺寸（毫米）
 # IMAGE_SIZE = (640, 480)    # 图片分辨率
 
 # --- Runtime Control Flags ---
-# 显示棋盘角点的过程图，设置为True表示显示
-VISUALIZE_STEPS = False
+# 显示详细过程内容，设置为True表示显示
+VERBOSE_MODE = False
 
 # --- Algorithm Hyperparameters ---
 SUBPIX_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.1)
