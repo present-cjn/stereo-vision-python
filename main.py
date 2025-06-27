@@ -6,7 +6,7 @@ from utils import file_utils, image_utils
 import cv2
 from visualization import visualizer
 from processing.stereo_matcher import StereoMatcher
-
+from processing.reconstructor import Reconstructor
 
 
 def setup_environment():
@@ -52,7 +52,7 @@ def handle_run_application():
     matcher = StereoMatcher() # Matcher会从config加载SGBM参数
     disparity_map = matcher.compute_disparity(left_rectified, right_rectified)
 
-    # 5. 可视化最终的视差图
+    # 可视化最终的视差图
     print("Visualizing disparity map...")
     visualizer.show_disparity_map(
         disparity_map,
@@ -61,6 +61,22 @@ def handle_run_application():
     )
 
     print("\nStereo matching application finished successfully.")
+
+    # --- 三维重建 ---
+    print("\n--- Performing 3D Reconstruction ---")
+    reconstructor = Reconstructor()
+    points_3D, colors = reconstructor.reconstruct(disparity_map, left_rectified, Q)
+
+    # --- 保存点云 ---
+    print("\n--- Saving Point Cloud ---")
+    file_utils.save_point_cloud(config.POINT_CLOUD_PATH, points_3D, colors)
+
+    # --- 可视化点云 ---
+    if config.VISUALIZE_STEPS:
+        print("\n--- Visualizing Point Cloud ---")
+        visualizer.show_point_cloud(config.POINT_CLOUD_PATH)
+
+    print("\nFull stereo vision pipeline finished successfully.")
 
 
 def main():

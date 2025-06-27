@@ -15,11 +15,13 @@ TEST_IMAGE_RIGHT_PATH = os.path.join(TEST_IMAGE_DIR,"rightPic.jpg")
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output/")
 CAMERA_PARAMS_PATH = os.path.join(OUTPUT_DIR, "stereo_params.yml")
 
+POINT_CLOUD_PATH = os.path.join(OUTPUT_DIR, "point_cloud.ply")
+
 
 # ---Calibration Target Parameters---
 # Image_Number = 13
-CHESSBOARD_SIZE = (11, 8)  # (内角点数量 a, 内角点数量 b)
-SQUARE_SIZE_MM = 25        # 棋盘格尺寸（毫米）
+CHESSBOARD_SIZE = (8, 11)  # (内角点数量 a, 内角点数量 b)
+SQUARE_SIZE_MM = 20        # 棋盘格尺寸（毫米）
 # IMAGE_SIZE = (640, 480)    # 图片分辨率
 
 # --- Runtime Control Flags ---
@@ -27,9 +29,13 @@ SQUARE_SIZE_MM = 25        # 棋盘格尺寸（毫米）
 VISUALIZE_STEPS = False
 
 # --- Algorithm Hyperparameters ---
-SUBPIX_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+SUBPIX_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.1)
 MONO_CALIB_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 STEREO_CALIB_CRITERIA = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 1e-5)
+STEREO_CALIB_FLAGS = cv2.CALIB_USE_INTRINSIC_GUESS
+# 点云后处理：为了加快显示和处理，可以对点云进行降采样
+# 例如 DOWNSAMPLE_FACTOR = 4 表示每 4x4 的像素区域只取一个点
+POINT_CLOUD_DOWNSAMPLE_FACTOR = 4
 
 # SGBM (Semi-Global Block Matching) Parameters
 SGBM_MIN_DISPARITY = 0

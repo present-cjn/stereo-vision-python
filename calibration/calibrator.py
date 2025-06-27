@@ -60,8 +60,7 @@ class StereoCalibrator:
         """
         print("\nPerforming stereo calibration to find the relationship between cameras...")
 
-        # 核心：使用 CALIB_FIX_INTRINSIC 标志，告诉函数不要再重新计算内参了！
-        flags = cv2.CALIB_FIX_INTRINSIC
+        flags = config.STEREO_CALIB_FLAGS
 
         ret, K1, D1, K2, D2, R, T, E, F = cv2.stereoCalibrate(
             obj_points, img_points_l, img_points_r,
@@ -107,7 +106,9 @@ class StereoCalibrator:
                 f"Image size mismatch! Expected {image_size}, but got {gray_right.shape[::-1]} in {image_right}"
 
             # 查找棋盘格角点
-            ret_left, corners_left = cv2.findChessboardCorners(gray_left, self.chessboard_size, None)
+            # --- 为左图添加 NORMALIZE_IMAGE 标志 ---
+            find_flags_l = cv2.CALIB_CB_NORMALIZE_IMAGE
+            ret_left, corners_left = cv2.findChessboardCorners(gray_left, self.chessboard_size, flags=find_flags_l)
             ret_right, corners_right = cv2.findChessboardCorners(gray_right, self.chessboard_size, None)
 
             if config.VISUALIZE_STEPS:
@@ -124,8 +125,8 @@ class StereoCalibrator:
             # 如果左右图像都成功找到了角点
             if ret_left and ret_right:
                 # 亚像素精度优化
-                corners_left_subpix = cv2.cornerSubPix(gray_left, corners_left, (11, 11), (-1, -1), criteria=config.SUBPIX_CRITERIA)
-                corners_right_subpix = cv2.cornerSubPix(gray_right, corners_right, (11, 11), (-1, -1), criteria=config.SUBPIX_CRITERIA)
+                corners_left_subpix = cv2.cornerSubPix(gray_left, corners_left, (3, 3), (-1, -1), criteria=config.SUBPIX_CRITERIA)
+                corners_right_subpix = cv2.cornerSubPix(gray_right, corners_right, (3, 3), (-1, -1), criteria=config.SUBPIX_CRITERIA)
 
                 object_points.append(self.objp)
                 image_points_left.append(corners_left_subpix)

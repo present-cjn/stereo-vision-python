@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import open3d as o3d
 
 
 def display_chessboard_corners(image_left, ret_left, corners_left,
@@ -73,6 +74,17 @@ def show_rectified_pair(left_rectified, right_rectified):
     cv2.imshow(window_name, combined_image)
 
     _wait_for_key_or_window_close(window_name)
+
+def show_point_cloud(ply_file_path):
+    """加载并显示 .ply 格式的点云文件。"""
+    print(f"Visualizing point cloud from {ply_file_path}...")
+    pcd = o3d.io.read_point_cloud(ply_file_path)
+    if not pcd.has_points():
+        print("Could not read point cloud or point cloud is empty.")
+        return
+
+    # 创建一个可视化窗口并显示点云
+    o3d.visualization.draw_geometries([pcd])
 
 # --- Internal Helper Functions ---
 def _wait_for_key_or_window_close(window_name):
