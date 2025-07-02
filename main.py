@@ -80,24 +80,21 @@ def handle_run_application(args):
         points_to_save = points_filtered
         colors_to_save = colors_filtered
 
-    file_utils.save_point_cloud(config.POINT_CLOUD_PATH, points_to_save, colors_to_save)
 
     # --- 可视化 ---
-    print(f"\n--- Visualizing Output (Mode: {args.output}) ---")
-    if args.output == 'point_cloud':
+    print("\n--- Visualizing Final Output ---")
+    visualizer.show_interactive_depth_map(
+        disparity_map,
+        left_rectified,
+        points_3D_matrix,
+        config.SGBM_MIN_DISPARITY,
+        config.SGBM_NUM_DISPARITIES
+    )
+
+    if args.view_3d:
+        print("\n--- Additionally visualizing 3D Point Cloud ---")
+        file_utils.save_point_cloud(config.POINT_CLOUD_PATH, points_to_save, colors_to_save)
         visualizer.show_point_cloud(config.POINT_CLOUD_PATH)
-    elif args.output == 'depth_map':
-        # --- 核心修正：使用原始的、未经过滤的 3D 矩阵 ---
-        # 现在它已经是 HxWx3 的形状了，不再需要 reshape！
-        visualizer.show_interactive_depth_map(
-            disparity_map,
-            left_rectified,
-            points_3D_matrix,  # <--- 直接使用这个 HxWx3 的矩阵
-            config.SGBM_MIN_DISPARITY,
-            config.SGBM_NUM_DISPARITIES
-        )
-    elif args.output == 'none':
-        print("Final visualization skipped as per '--output none' option.")
 
     print("\nFull stereo vision pipeline finished successfully.")
 
@@ -122,13 +119,11 @@ def main():
 
     # 创建 'run' 命令
     parser_run = subparsers.add_parser('run', help='Run the main stereo matching application using existing calibration.')
-    # 添加一个 --output 参数，让用户选择输出模式
+    # 添加一个 --view-3d 参数，可以选择为输出点云图
     parser_run.add_argument(
-        '-o', '--output',
-        type=str,
-        default='depth_map',
-        choices=['depth_map', 'point_cloud', 'none'], # 'none' 表示只计算和保存，不显示最终结果
-        help="Specify the final visualization output type. Default is 'depth_map'."
+        '--view-3d',
+        action='store_true',
+        help="Additionally, visualize the generated point cloud in 3D using Open3D."
     )
     parser_run.set_defaults(func=handle_run_application)
 

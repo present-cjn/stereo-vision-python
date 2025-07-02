@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import open3d as o3d
-
 
 def display_chessboard_corners(image_left, ret_left, corners_left,
                                image_right, ret_right, corners_right,
@@ -77,6 +75,13 @@ def show_rectified_pair(left_rectified, right_rectified):
 
 def show_point_cloud(ply_file_path):
     """加载并显示 .ply 格式的点云文件。"""
+    try:
+        import open3d as o3d
+    except ImportError:
+        print("\n[Error] Open3D is not installed, but is required for 3D visualization.")
+        print("To install, run: pip install open3d")
+        return
+
     print(f"Visualizing point cloud from {ply_file_path}...")
     pcd = o3d.io.read_point_cloud(ply_file_path)
     if not pcd.has_points():
