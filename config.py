@@ -21,7 +21,7 @@ POINT_CLOUD_PATH = os.path.join(OUTPUT_DIR, "point_cloud.ply")
 # ---Calibration Target Parameters---
 # Image_Number = 13
 CHESSBOARD_SIZE = (8, 11)  # (内角点数量 a, 内角点数量 b)
-SQUARE_SIZE_MM = 20        # 棋盘格尺寸（毫米）
+SQUARE_SIZE_MM = 12        # 棋盘格尺寸（毫米）
 # IMAGE_SIZE = (640, 480)    # 图片分辨率
 
 # --- Runtime Control Flags ---
