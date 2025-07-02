@@ -14,11 +14,13 @@ class Reconstructor:
         2. 经过过滤和清理的点列表（用于保存和3D可视化）。
         """
         # --- 生成原始的3D点矩阵 ---
-        points_3D_matrix = cv2.reprojectImageTo3D(disparity_map, Q_matrix)
+        true_disparity_map = disparity_map.astype(np.float32) / 16.0
+
+        points_3D_matrix = cv2.reprojectImageTo3D(true_disparity_map, Q_matrix)
         colors_matrix = cv2.cvtColor(left_rectified_img, cv2.COLOR_BGR2RGB)
 
         # --- 过滤无效点，生成干净的点列表 ---
-        mask = disparity_map > disparity_map.min()
+        mask = true_disparity_map > true_disparity_map.min()
         points_3D_filtered = points_3D_matrix[mask]
         colors_filtered = colors_matrix[mask]
 

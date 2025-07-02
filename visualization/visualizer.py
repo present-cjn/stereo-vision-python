@@ -143,11 +143,10 @@ def show_interactive_depth_map(
             point_3d = points_3D[y, x - w]
             px, py, pz = point_3d[0], point_3d[1], point_3d[2]
 
-            # 准备要显示的文本
-            # 我们只显示Z值（深度），单位是毫米(mm)，可以转换为米(m)
-            # 过滤掉无效的深度值（通常Z值会非常大）
-            if pz < 10000:  # 过滤掉10米以外的点
-                distance_text = f"Distance: {pz / 1000:.2f} m"
+            # 我们只显示Z值（深度），单位是毫米(mm)
+            # 过滤掉无效的深度值
+            if pz < 10000 and pz > 10:  # 过滤掉10米以外的点和10mm以内的点
+                distance_text = f"Dist: {int(pz)} mm"
             else:
                 distance_text = "Distance: inf"
 
