@@ -17,10 +17,29 @@ def setup_environment():
 
 # --- 创建不同的函数来处理不同的任务 ---
 
-def handle_calibration():
+def handle_calibration(args):
     """处理标定任务的函数"""
     print("\n--- Running Calibration Task ---")
-    calibrator = StereoCalibrator()
+    if args.corners:
+        print("Using chessboard size from command line.")
+        try:
+            corners_width, corners_height = map(int, args.corners.split(','))
+            chessboard_size = (corners_width, corners_height)
+        except ValueError:
+            print(f"Error: Invalid format for --corners: '{args.corners}'. Please use 'width,height'.")
+            return
+    else:
+        print("Using default chessboard size from config.py.")
+        chessboard_size = config.CHESSBOARD_SIZE
+
+    if args.size is not None:
+        print("Using square size from command line.")
+        square_size_mm = args.size
+    else:
+        print("Using default square size from config.py.")
+        square_size_mm = config.SQUARE_SIZE_MM
+
+    calibrator = StereoCalibrator(chessboard_size=chessboard_size, square_size=square_size_mm)
     calibrator.run(config.CALIBRATION_IMAGE_DIR)
     print("\nCalibration task finished.")
 
@@ -115,6 +134,18 @@ def main():
 
     # 创建 'calibrate' 命令
     parser_calibrate = subparsers.add_parser('calibrate', help='Run the stereo camera calibration process.')
+    parser_calibrate.add_argument(
+        '-c', '--corners',
+        type=str,
+        default=None,
+        help=f"Chessboard inner corners 'width,height'. Overrides the default in config.py ({config.CHESSBOARD_SIZE})."
+    )
+    parser_calibrate.add_argument(
+        '-s', '--size',
+        type=float,
+        default=None,
+        help=f"Side length of a chessboard square in mm. Overrides the default in config.py ({config.SQUARE_SIZE_MM})."
+    )
     parser_calibrate.set_defaults(func=handle_calibration)
 
     # 创建 'run' 命令
@@ -140,7 +171,7 @@ def main():
     if args.command == 'run':
         args.func(args)
     else:
-        args.func()
+        args.func(args)
 
 if __name__ == "__main__":
     main()

@@ -8,9 +8,9 @@ from utils import file_utils
 
 
 class StereoCalibrator:
-    def __init__(self):
-        self.chessboard_size = config.CHESSBOARD_SIZE
-        self.square_size = config.SQUARE_SIZE_MM
+    def __init__(self, chessboard_size: tuple, square_size: float):
+        self.chessboard_size = chessboard_size
+        self.square_size = square_size
 
         """准备 objectPoints"""
         self.objp = np.zeros((self.chessboard_size[0] * self.chessboard_size[1], 3), np.float32)
