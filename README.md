@@ -111,7 +111,7 @@ calibrate 命令通过命令行参数来接收你的标定板信息：
 
 示例:  
 对于一个内角点为 11x8，格子边长为 12mm 的标定板，命令如下：  
-`python main.py calibrate \--corners 11,8 \--size 12
+`python main.py calibrate \--corners 11,8 \--size 12`
 
 为了方便在IDE中调试，你也可以不提供任何参数，此时程序会自动使用在 config.py 文件中定义的默认值。
 
