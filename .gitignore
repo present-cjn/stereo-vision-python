@@ -1,0 +1,9 @@
+# JetBrains IDEs folder
+.idea/
+
+# Python cache
+__pycache__/
+
+# environment
+venv/
+*.pyc
