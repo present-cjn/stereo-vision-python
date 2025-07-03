@@ -1,6 +1,5 @@
 import cv2
 import re
-import open3d as o3d
 
 # TODO(cjn): Refactor this to use a Pydantic model for data validation.
 # This will prevent silent errors from malformed or type-incorrect data in the YAML file.
@@ -53,6 +52,12 @@ def load_stereo_params(path):
 
 def save_point_cloud(path, points_3D, colors):
     """使用 Open3D 将点云保存为 .ply 文件。"""
+    try:
+        import open3d as o3d
+    except ImportError:
+        print("\n[Warning] Open3D is not installed, cannot save point cloud.")
+        print("To install, run: pip install open3d")
+        return
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points_3D)
     # Open3D 需要的颜色值是 0-1 范围的浮点数

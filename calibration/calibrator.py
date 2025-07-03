@@ -8,9 +8,9 @@ from utils import file_utils
 
 
 class StereoCalibrator:
-    def __init__(self):
-        self.chessboard_size = config.CHESSBOARD_SIZE
-        self.square_size = config.SQUARE_SIZE_MM
+    def __init__(self, chessboard_size: tuple, square_size: float):
+        self.chessboard_size = chessboard_size
+        self.square_size = square_size
 
         """准备 objectPoints"""
         self.objp = np.zeros((self.chessboard_size[0] * self.chessboard_size[1], 3), np.float32)
@@ -39,7 +39,7 @@ class StereoCalibrator:
         )
 
         # 检查单目标定的质量
-        assert ret < 5.0, f"{camera_name} camera reprojection error is too high: {ret}"
+        assert ret < 1.0, f"{camera_name} camera reprojection error is too high: {ret}"
         print(f"  - {camera_name} camera calibrated with reprojection error: {ret}")
 
         return K, D, ret
@@ -71,7 +71,7 @@ class StereoCalibrator:
             criteria=config.STEREO_CALIB_CRITERIA  # 可以和单目标定的 criteria 不同
         )
 
-        assert ret < 5.0, f"Stereo calibration reprojection error is too high: {ret}"
+        assert ret < 1.0, f"Stereo calibration reprojection error is too high: {ret}"
         print(f"  - Stereo relationship calibrated with reprojection error: {ret}")
 
         # 将所有最终参数打包
@@ -131,6 +131,9 @@ class StereoCalibrator:
                 object_points.append(self.objp)
                 image_points_left.append(corners_left_subpix)
                 image_points_right.append(corners_right_subpix)
+            else:
+                print(f"  - Skipped pair: {os.path.basename(left_image_path)} & {os.path.basename(right_image_path)} "
+                      f"(Left found: {ret_left}, Right found: {ret_right})")
 
         if not object_points:
             raise ValueError("Could not find chessboard corners in any of the image pairs.")
@@ -157,7 +160,7 @@ class StereoCalibrator:
         assert K1.shape == (3, 3), "K1 matrix shape is incorrect!"
         assert R.shape == (3, 3), "R rotation matrix shape is incorrect!"
         assert T.shape == (3, 1), "T translation vector shape is incorrect!"
-        assert ret < 6.0, f"Reprojection error {ret} is too high! Calibration likely failed."
+        assert ret < 1.0, f"Reprojection error {ret} is too high! Calibration likely failed."
 
         # 将所有结果打包成一个字典
         stereo_params = {

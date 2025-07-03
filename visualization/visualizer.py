@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import open3d as o3d
-
 
 def display_chessboard_corners(image_left, ret_left, corners_left,
                                image_right, ret_right, corners_right,
@@ -77,6 +75,13 @@ def show_rectified_pair(left_rectified, right_rectified):
 
 def show_point_cloud(ply_file_path):
     """加载并显示 .ply 格式的点云文件。"""
+    try:
+        import open3d as o3d
+    except ImportError:
+        print("\n[Error] Open3D is not installed, but is required for 3D visualization.")
+        print("To install, run: pip install open3d")
+        return
+
     print(f"Visualizing point cloud from {ply_file_path}...")
     pcd = o3d.io.read_point_cloud(ply_file_path)
     if not pcd.has_points():
@@ -143,11 +148,10 @@ def show_interactive_depth_map(
             point_3d = points_3D[y, x - w]
             px, py, pz = point_3d[0], point_3d[1], point_3d[2]
 
-            # 准备要显示的文本
-            # 我们只显示Z值（深度），单位是毫米(mm)，可以转换为米(m)
-            # 过滤掉无效的深度值（通常Z值会非常大）
-            if pz < 10000:  # 过滤掉10米以外的点
-                distance_text = f"Distance: {pz / 1000:.2f} m"
+            # 我们只显示Z值（深度），单位是毫米(mm)
+            # 过滤掉无效的深度值
+            if pz < 10000 and pz > 10:  # 过滤掉10米以外的点和10mm以内的点
+                distance_text = f"Dist: {int(pz)} mm"
             else:
                 distance_text = "Distance: inf"
 
