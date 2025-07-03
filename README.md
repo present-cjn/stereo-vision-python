@@ -2,22 +2,22 @@
 
 # **基于 Python 和 OpenCV 的双目立体视觉项目**
 
-这是一个端到端的双目立体视觉项目，它实现了从相机标定、立体匹配到三维重建的完整流程。项目代码结构清晰、模块化，并提供了一个简单易用的命令行界面来执行不同的任务。
+这是一个端到端的双目立体视觉项目，它实现了从相机标定、立体匹配到三维重建的完整流程。项目代码采用模块化设计，并提供了一个简单易用的命令行界面来执行不同的任务。
 
-![](stereo_example.png "左侧为包含三脚架、药瓶和杯子的原始灰度图像，右侧为对应的伪彩色深度图，顶部显示鼠标位置的距离信息为 1203 mm")
+![](stereo_example.png "左侧为包含三脚架、药瓶和杯子的原始灰度图像，右侧为对应的伪彩色深度图")
 
 ## **目录**
 
-* [✨ 主要功能](https://www.google.com/search?q=%23-%E4%B8%BB%E8%A6%81%E5%8A%9F%E8%83%BD)  
-* [📂 项目结构](https://www.google.com/search?q=%23-%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84)  
-* [🚀 快速开始](https://www.google.com/search?q=%23-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)  
-  * [1\. 环境准备](https://www.google.com/search?q=%231-%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87)  
-  * [2\. 安装依赖](https://www.google.com/search?q=%232-%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96)  
-* [📖 使用指南](https://www.google.com/search?q=%23-%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97)  
-  * [1\. 摄像头标定 (calibrate)](https://www.google.com/search?q=%231-%E6%91%84%E5%83%8F%E5%A4%B4%E6%A0%87%E5%AE%9A-calibrate)  
-  * [2\. 运行主程序 (run)](https://www.google.com/search?q=%232-%E8%BF%90%E8%A1%8C%E4%B8%BB%E7%A8%8B%E5%BA%8F-run)  
-  * [3\. 查看帮助](https://www.google.com/search?q=%233-%E6%9F%A5%E7%9C%8B%E5%B8%AE%E5%8A%A9)  
-* [🔧 参数配置](https://www.google.com/search?q=%23-%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE)
+* [✨ 主要功能](#-主要功能)  
+* [📂 项目结构](#-项目结构)  
+* [🚀 快速开始](#-快速开始)  
+  * [1\. 环境准备](#1-环境准备)  
+  * [2\. 安装依赖](#2-安装依赖)  
+* [📖 使用指南](#-使用指南)  
+  * [1\. 摄像头标定 (calibrate)](#1-摄像头标定-calibrate)  
+  * [2\. 运行主程序 (run)](#2-运行主程序-run)  
+  * [3\. 查看帮助](#3-查看帮助)  
+* [🔧 参数配置](#-参数配置)
 
 ## **✨ 主要功能**
 
@@ -74,29 +74,28 @@ stereo-vision-project/
 
 首先，克隆本项目到你的本地：
 
-git clone https://github.com/present-cjn/stereo-vision-python.git  
-cd stereo-vision-project
+`git clone https://github.com/present-cjn/stereo-vision-python.git`  
+`cd stereo-vision-project`
 
 推荐使用 Python 虚拟环境。
 
 \# 创建虚拟环境  
-python \-m venv venv
+`python \-m venv venv`
 
-\# 激活虚拟环境  
-\# Windows: venv\\Scripts\\activate  
-\# macOS/Linux: source venv/bin/activate
+\# 激活虚拟环境(macOS/Linux)  
+`source venv/bin/activate`
 
 ### **2\. 安装依赖**
 
 本项目的核心功能依赖于 requirements.txt。
 
-pip install \-r requirements.txt
+`pip install \-r requirements.txt`
 
 #### **可选功能：3D可视化**
 
 如果你想使用 3D 点云可视化功能 (--view-3d 标志)，你需要额外安装 Open3D 库。
 
-pip install open3d
+`pip install open3d`
 
 ## **📖 使用指南**
 
@@ -108,41 +107,43 @@ pip install open3d
 
 calibrate 命令通过命令行参数来接收你的标定板信息：
 
-python main.py calibrate \--corners \<宽边角点数\>,\<高边角点数\> \--size \<格子边长mm\>
+`python main.py calibrate \--corners \<宽边角点数\>,\<高边角点数\> \--size \<格子边长mm\>`
 
 示例:  
 对于一个内角点为 11x8，格子边长为 12mm 的标定板，命令如下：  
-python main.py calibrate \--corners 11,8 \--size 12
+`python main.py calibrate \--corners 11,8 \--size 12
 
 为了方便在IDE中调试，你也可以不提供任何参数，此时程序会自动使用在 config.py 文件中定义的默认值。
 
 如果你想查看标定过程中的角点检测效果，可以随时添加 \-v 或 \--verbose 全局标志：
 
-python main.py \-v calibrate \--corners 11,8 \--size 12
+`python main.py \-v calibrate \--corners 11,8 \--size 12`
 
 ### **2\. 运行主程序 (run)**
 
 当标定完成后，你可以运行主程序来进行立体匹配和三维重建。你需要准备一对测试图片，并将其路径在 config.py 中配置好。
 
 * **默认行为 (显示交互式深度图)**:  
-  python main.py run
+  `python main.py run`
 
   程序会弹出一个窗口，左侧为原始图像，右侧为彩色深度图。在右侧窗口移动鼠标，左上角会实时显示该点的距离。  
 * **额外显示三维点云 (需要已安装 open3d)**:  
-  python main.py run \--view-3d
+  `python main.py run \--view-3d`
 
   在显示交互式深度图的同时，会额外弹出一个可交互的 3D 窗口来显示重建的点云。程序总会生成 .ply 点云文件，无论是否使用此标志。  
 * **开启详细调试模式**:  
   使用 \-v 或 \--verbose 标志，可以显示所有的中间过程图像（如校正图、原始视差图）。  
-  python main.py \-v run \--view-3d
+  `python main.py \-v run \--view-3d`
 
 ### **3\. 查看帮助**
 
 随时可以通过 \--help 查看所有命令和选项的详细说明。
 
+```shell
 python main.py \--help  
 python main.py calibrate \--help  
 python main.py run \--help
+```
 
 ## **🔧 参数配置**
 
