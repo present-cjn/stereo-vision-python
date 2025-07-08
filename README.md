@@ -45,28 +45,35 @@
 
 ## **📂 项目结构**
 
+```
 stereo-vision-project/  
-├── main.py                 \# 主程序入口，命令行界面  
-├── config.py               \# 所有配置参数  
-├── requirements.txt        \# 项目核心依赖  
+├── 📄 main.py                       # 主程序入口，命令行界面  
+├── 📄 config.py                     # 所有配置参数  
+├── 📄 requirements.txt              # 项目核心依赖  
 |  
-├── calibration/            \# 相机标定模块  
-│   └── calibrator.py  
-├── processing/             \# 核心处理模块  
-│   ├── stereo\_matcher.py   \# 立体匹配  
-│   └── reconstructor.py    \# 三维重建  
-├── utils/                  \# 通用工具函数  
-│   ├── file\_utils.py       \# 文件读写  
-│   ├── image\_utils.py      \# 图像处理  
-│   └── sorting\_utils.py    \# 自然排序  
-├── visualization/          \# 可视化模块  
-│   └── visualizer.py  
-├── tests/                  \# 测试代码  
-│   ├── test\_calibration.py  
-│   └── test\_calibration\_stability.py  
-└── data/                   \# 数据  
-    ├── calibration\_images/ \# 用于标定的棋盘格图片  
-    └── test\_images/        \# 用于立体匹配的测试图片
+├── 📁 calibration/                  # 📷 相机标定模块  
+│    └── calibrator.py  
+│ 
+├── 📁 processing/                   # 核心处理模块  
+│    ├── stereo_matcher.py          # 立体匹配  
+│    └── reconstructor.py            # 三维重建  
+│ 
+├── 📁 utils/                        # 🛠️ 通用工具函数  
+│    ├── file_utils.py               # 文件读写  
+│    ├── image_utils.py              # 图像处理  
+│    └── sorting_utils.py            # 自然排序  
+│ 
+├── 📁 visualization/                # 📊 可视化模块  
+│    └── visualizer.py  
+│ 
+├── 📁 tests/                        # 测试代码  
+│    ├── test_calibration.py  
+│    └── test_calibration_stability.py  
+│ 
+└── 📁 data/                         # 🗃️ 数据  
+     ├── calibration_images/         # 用于标定的棋盘格图片  
+     └── test_images/                # 用于立体匹配的测试图片
+```
 
 ## **🚀 快速开始**
 
@@ -80,7 +87,7 @@ stereo-vision-project/
 推荐使用 Python 虚拟环境。
 
 \# 创建虚拟环境  
-`python \-m venv venv`
+`python -m venv venv`
 
 \# 激活虚拟环境(macOS/Linux)  
 `source venv/bin/activate`
@@ -89,7 +96,7 @@ stereo-vision-project/
 
 本项目的核心功能依赖于 requirements.txt。
 
-`pip install \-r requirements.txt`
+`pip install -r requirements.txt`
 
 #### **可选功能：3D可视化**
 
@@ -107,17 +114,17 @@ stereo-vision-project/
 
 calibrate 命令通过命令行参数来接收你的标定板信息：
 
-`python main.py calibrate \--corners \<宽边角点数\>,\<高边角点数\> \--size \<格子边长mm\>`
+`python main.py calibrate --corners <宽边角点数>,<高边角点数> --size <格子边长mm>`
 
 示例:  
 对于一个内角点为 11x8，格子边长为 12mm 的标定板，命令如下：  
-`python main.py calibrate \--corners 11,8 \--size 12`
+`python main.py calibrate --corners 11,8 --size 12`
 
 为了方便在IDE中调试，你也可以不提供任何参数，此时程序会自动使用在 config.py 文件中定义的默认值。
 
 如果你想查看标定过程中的角点检测效果，可以随时添加 \-v 或 \--verbose 全局标志：
 
-`python main.py \-v calibrate \--corners 11,8 \--size 12`
+`python main.py -v calibrate --corners 11,8 --size 12`
 
 ### **2\. 运行主程序 (run)**
 
@@ -128,21 +135,21 @@ calibrate 命令通过命令行参数来接收你的标定板信息：
 
   程序会弹出一个窗口，左侧为原始图像，右侧为彩色深度图。在右侧窗口移动鼠标，左上角会实时显示该点的距离。  
 * **额外显示三维点云 (需要已安装 open3d)**:  
-  `python main.py run \--view-3d`
+  `python main.py run --view-3d`
 
   在显示交互式深度图的同时，会额外弹出一个可交互的 3D 窗口来显示重建的点云。程序总会生成 .ply 点云文件，无论是否使用此标志。  
 * **开启详细调试模式**:  
   使用 \-v 或 \--verbose 标志，可以显示所有的中间过程图像（如校正图、原始视差图）。  
-  `python main.py \-v run \--view-3d`
+  `python main.py -v run --view-3d`
 
 ### **3\. 查看帮助**
 
 随时可以通过 \--help 查看所有命令和选项的详细说明。
 
 ```shell
-python main.py \--help  
-python main.py calibrate \--help  
-python main.py run \--help
+python main.py --help  
+python main.py calibrate --help  
+python main.py run --help
 ```
 
 ## **🔧 参数配置**
