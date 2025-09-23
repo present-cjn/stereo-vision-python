@@ -1,36 +1,106 @@
+/*
+ * 全局样式和基础布局
+ */
 body, html {
     height: 100%;
-    overflow: hidden; /* 防止出现滚动条 */
+    /* 移除 overflow: hidden; 因为这会禁用滚动条。
+       我们希望内容区域可以滚动，而不是整个页面。*/
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/*
+ * 主容器布局
+ */
+.container-fluid.vh-100.d-flex.flex-column {
+    height: 100vh;
+}
+
+/*
+ * 卡片和内容区
+ */
+.card-body.overflow-auto {
+    /* 使用 flex-grow: 1; 让卡片内容区填充剩余空间 */
+    flex-grow: 1;
+    /* 确保内容区域可以独立滚动 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* 针对 iOS 的平滑滚动 */
+}
+
+/*
+ * 分步操作容器样式
+ */
 .step-container {
-    border: 1px solid #dee2e6;
+    border: 1px solid #e9ecef;
     border-radius: 0.375rem;
-    padding: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
     background-color: #ffffff;
 }
 
+/* 用于隐藏容器的类 */
 .step-container.d-none {
     display: none !important;
 }
 
+/*
+ * 标题样式
+ */
 .step-title {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    border-bottom: 2px solid #0d6efd;
-    padding-bottom: 0.5rem;
+    color: #0d6efd;
 }
 
+/*
+ * 预览行样式
+ */
+.preview-row {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* 用于隐藏预览行的类 */
+.preview-row.d-none {
+    display: none !important;
+}
+
+/*
+ * 图片对容器样式
+ */
+.image-pair-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* 顶部对齐，防止图片大小不一致时出现垂直偏移 */
+}
+
+/*
+ * 图片占位符样式
+ */
 .image-placeholder {
-    width: 48%;
-    height: 95%;
-    background-color: #e9ecef;
-    border: 2px dashed #ced4da;
+    width: 49%;
+    min-height: 120px; /* 最小高度，在图片加载前提供视觉占位 */
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     display: flex;
     justify-content: center;
     align-items: center;
     color: #6c757d;
-    font-size: 1rem;
+    overflow: hidden;
+    position: relative;
+    padding: 0.5rem; /* 为图片增加一些内边距，让其不紧贴边缘 */
+}
+
+/*
+ * --- 核心修复：确保所有图片在容器内同比缩放，防止溢出 ---
+ *
+ * 这条规则作用于所有在 .image-placeholder 内的 img 元素
+ */
+.image-placeholder img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* 保持宽高比，使其完全适应容器，不被裁切 */
+    display: block; /* 移除 img 元素底部可能存在的空白 */
 }
