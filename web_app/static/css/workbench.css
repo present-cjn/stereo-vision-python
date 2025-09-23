@@ -1,11 +1,12 @@
 /*
  * 全局样式和基础布局
+ * 采用更高级、更柔和的现代配色
  */
 body, html {
-    height: 100%;
-    /* 移除 overflow: hidden; 因为这会禁用滚动条。
-       我们希望内容区域可以滚动，而不是整个页面。*/
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f6f8fa; /* 极浅的灰色背景 */
+    color: #4b5563; /* 柔和的深灰色文字 */
+    line-height: 1.6;
 }
 
 /*
@@ -16,54 +17,143 @@ body, html {
 }
 
 /*
- * 卡片和内容区
+ * 大标题样式
+ * 字体加粗，使用深色文字，去除渐变和描边
  */
-.card-body.overflow-auto {
-    /* 使用 flex-grow: 1; 让卡片内容区填充剩余空间 */
-    flex-grow: 1;
-    /* 确保内容区域可以独立滚动 */
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* 针对 iOS 的平滑滚动 */
+.h3 {
+    font-weight: 800;
+    font-size: 2rem;
+    color: #1f2937; /* 极深的黑色，突出标题 */
+    letter-spacing: -0.05em; /* 字母间距微调，增加设计感 */
+    padding-bottom: 0.5rem;
 }
 
 /*
- * 分步操作容器样式
+ * 卡片和内容区
+ * 增加更深、更高级的阴影效果
  */
-.step-container {
-    border: 1px solid #e9ecef;
-    border-radius: 0.375rem;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    background-color: #ffffff;
+.card {
+    border: 1px solid #e5e7eb; /* 细微的浅灰色边框 */
+    border-radius: 1rem; /* 增加圆角，更柔和 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03); /* 双层阴影，更有层次感 */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 平滑的缓入缓出过渡 */
 }
 
-/* 用于隐藏容器的类 */
+/* 悬停时卡片上浮效果 */
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.25rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+}
+
+.card-body.overflow-auto {
+    flex-grow: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1.5rem;
+}
+
+/*
+ * 按钮样式
+ * 简洁的圆角和细致的阴影
+ */
+.btn {
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-primary {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2), 0 1px 3px rgba(59, 130, 246, 0.12);
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3), 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.btn-success {
+    background-color: #10b981;
+    border-color: #10b981;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2), 0 1px 3px rgba(16, 185, 129, 0.12);
+}
+
+.btn-success:hover {
+    background-color: #059669;
+    border-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3), 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+/* 按钮图标动画 */
+.btn i {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover i {
+    transform: scale(1.1) translateX(2px); /* 悬停时图标微移，更具动感 */
+}
+
+/*
+ * 步骤容器样式
+ */
+.step-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
 .step-container.d-none {
     display: none !important;
 }
 
 /*
- * 标题样式
+ * 标题和图标样式
  */
 .step-title {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.2rem;
+    font-weight: 700;
     margin-bottom: 1rem;
-    color: #0d6efd;
+    color: #1f2937;
 }
+
+/* 为不同阶段的图标设置不同颜色 */
+#step-1-upload .step-title i { color: #f59e0b; } /* 暖橙色 */
+#step-2-rectify .step-title i { color: #8b5cf6; } /* 柔和紫色 */
+#step-3-match .step-title i { color: #06b6d4; } /* 蓝绿色 */
+#step-4-reconstruct .step-title i { color: #22c55e; } /* 活泼的绿色 */
 
 /*
  * 预览行样式
  */
 .preview-row {
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px dashed #d1d5db; /* 虚线分隔，更轻盈 */
+    animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* 用于隐藏预览行的类 */
-.preview-row.d-none {
-    display: none !important;
+.preview-row h6 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #4b5563;
 }
 
 /*
@@ -72,7 +162,7 @@ body, html {
 .image-pair-container {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* 顶部对齐，防止图片大小不一致时出现垂直偏移 */
+    align-items: flex-start;
 }
 
 /*
@@ -80,27 +170,36 @@ body, html {
  */
 .image-placeholder {
     width: 49%;
-    min-height: 120px; /* 最小高度，在图片加载前提供视觉占位 */
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
+    min-height: 120px;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #6c757d;
+    color: #9ca3af;
     overflow: hidden;
     position: relative;
-    padding: 0.5rem; /* 为图片增加一些内边距，让其不紧贴边缘 */
+    padding: 0.75rem;
 }
 
-/*
- * --- 核心修复：确保所有图片在容器内同比缩放，防止溢出 ---
- *
- * 这条规则作用于所有在 .image-placeholder 内的 img 元素
- */
+/* 确保所有图片在容器内同比缩放，防止溢出 */
 .image-placeholder img {
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain; /* 保持宽高比，使其完全适应容器，不被裁切 */
-    display: block; /* 移除 img 元素底部可能存在的空白 */
+    object-fit: contain;
+    display: block;
+    border-radius: 0.375rem;
+}
+
+/* 淡入动画关键帧 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

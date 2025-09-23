@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>双目立体视觉工作台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/workbench.css') }}">
 </head>
 <body>
@@ -19,7 +20,7 @@
                     <div class="card-body overflow-auto">
 
                         <div id="step-1-upload" class="step-container">
-                            <h5 class="step-title">阶段一：上传数据</h5>
+                            <h5 class="step-title"><i class="ri-upload-2-line me-2"></i>阶段一：上传数据</h5>
                             <div class="mb-2">
                                 <label for="left-image-input" class="form-label">左相机图像</label>
                                 <input class="form-control form-control-sm" type="file" id="left-image-input">
@@ -32,25 +33,25 @@
                                 <label for="params-file-input" class="form-label">标定参数 (.yml)</label>
                                 <input class="form-control form-control-sm" type="file" id="params-file-input" accept=".yml,.yaml">
                             </div>
-                            <button id="upload-btn" class="btn btn-primary w-100">上传并预览</button>
+                            <button id="upload-btn" class="btn btn-primary w-100"><i class="ri-play-line me-2"></i>上传并预览</button>
                         </div>
 
                         <div id="step-2-rectify" class="step-container mt-3 d-none">
-                            <h5 class="step-title">阶段二：立体校正</h5>
+                            <h5 class="step-title"><i class="ri-scissors-cut-line me-2"></i>阶段二：立体校正</h5>
                              <p class="form-text small">检查预览区，确认原始图像已加载。</p>
-                            <button id="rectify-btn" class="btn btn-primary w-100">开始校正</button>
+                            <button id="rectify-btn" class="btn btn-primary w-100"><i class="ri-play-line me-2"></i>开始校正</button>
                         </div>
 
                         <div id="step-3-match" class="step-container mt-3 d-none">
-                            <h5 class="step-title">阶段三：立体匹配</h5>
+                            <h5 class="step-title"><i class="ri-focus-3-line me-2"></i>阶段三：立体匹配</h5>
                              <p class="form-text small">检查预览区，确认图像已校正对齐。</p>
-                            <button id="match-btn" class="btn btn-primary w-100">生成/更新视差图</button>
+                            <button id="match-btn" class="btn btn-primary w-100"><i class="ri-play-line me-2"></i>生成/更新视差图</button>
                         </div>
 
                         <div id="step-4-reconstruct" class="step-container mt-3 d-none">
-                            <h5 class="step-title">阶段四：三维重建</h5>
+                            <h5 class="step-title"><i class="ri-cube-3d-line me-2"></i>阶段四：三维重建</h5>
                              <p class="form-text small">对生成的视差图进行三维重建。</p>
-                            <button id="reconstruct-btn" class="btn btn-success w-100">开始重建</button>
+                            <button id="reconstruct-btn" class="btn btn-success w-100"><i class="ri-play-line me-2"></i>开始重建</button>
                         </div>
                     </div>
                 </div>
@@ -60,7 +61,7 @@
                  <div class="card h-100 shadow-sm">
                     <div class="card-header fw-bold">图像预览流水线</div>
                     <div class="card-body overflow-auto d-flex flex-column" id="pipeline-area">
-                        </div>
+                    </div>
                 </div>
             </div>
 
