@@ -154,6 +154,75 @@ def rectify_images_endpoint():
         return jsonify({'error': f'校正过程中发生错误: {str(e)}'}), 500
 
 
+@app.route('/compute_disparity', methods=['POST'])
+def compute_disparity_endpoint():
+    """
+    阶段三：接收任务ID和SGBM参数，计算视差图并返回其URL。
+    这是一个同步、快速响应的接口，用于实时调参。
+    """
+    try:
+        data = request.get_json()
+        task_id = data.get('task_id')
+        params = data.get('params')
+        if not task_id or not params:
+            return jsonify({'error': '缺少任务ID或SGBM参数'}), 400
+
+        task_folder = os.path.join(app.config['UPLOAD_FOLDER'], task_id)
+
+        # --- 1. 加载校正后的图像 ---
+        left_rect_path = os.path.join(task_folder, "left_rectified.png")
+        right_rect_path = os.path.join(task_folder, "right_rectified.png")
+
+        if not os.path.exists(left_rect_path) or not os.path.exists(right_rect_path):
+            return jsonify({'error': '校正后的图像未找到，请先执行校正步骤'}), 400
+
+        left_rectified = cv2.imread(left_rect_path)
+        right_rectified = cv2.imread(right_rect_path)
+
+        # --- 2. 使用前端传来的参数实例化匹配器 ---
+        # 我们使用 .get() 方法，如果前端没有提供某个参数，就从config中获取默认值
+        matcher = StereoMatcher(
+            minDisparity=params.get('minDisparity', config.SGBM_MIN_DISPARITY),
+            numDisparities=params.get('numDisparities', config.SGBM_NUM_DISPARITIES),
+            blockSize=params.get('blockSize', config.SGBM_BLOCK_SIZE),
+            uniquenessRatio=params.get('uniquenessRatio', config.SGBM_UNIQUENESS_RATIO),
+            speckleWindowSize=params.get('speckleWindowSize', config.SGBM_SPECKLE_WINDOW_SIZE),
+            speckleRange=params.get('speckleRange', config.SGBM_SPECKLE_RANGE),
+            disp12MaxDiff=params.get('disp12MaxDiff', config.SGBM_DISP12_MAX_DIFF)
+            # 如果你在前端添加了 P1, P2 的滑块，也可以在这里用同样的方式获取
+        )
+
+        # --- 3. 计算并保存视差图 ---
+        disparity_map = matcher.compute_disparity(left_rectified, right_rectified)
+
+        # a) 将原始的、数据更丰富的16位视差图保存起来，供后续的三维重建使用
+        disp_raw_path = os.path.join(task_folder, "disparity_raw.npy")
+        np.save(disp_raw_path, disparity_map)
+
+        # b) 创建用于前端显示的可视化版本 (8位彩色图)
+        disp_to_show = cv2.normalize(disparity_map, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        colormap_disp = cv2.applyColorMap(disp_to_show, cv2.COLORMAP_JET)
+
+        # 每次调参都生成一个带时间戳的图片，避免浏览器缓存旧的图片
+        timestamp = int(time.time() * 1000)
+        disp_filename = f"disparity_{timestamp}.png"
+        disp_path = os.path.join(task_folder, disp_filename)
+        cv2.imwrite(disp_path, colormap_disp)
+
+        # --- 4. 返回新视差图的URL ---
+        disparity_url = url_for('static', filename=f'uploads/{task_id}/{disp_filename}')
+
+        return jsonify({
+            'message': '视差图计算成功!',
+            'disparity_map_url': disparity_url
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'计算视差时发生错误: {str(e)}'}), 500
+
+
 @app.route('/status/<task_id>')
 def get_task_status(task_id):
     """
