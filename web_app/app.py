@@ -30,8 +30,8 @@ os.makedirs(CALIB_UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
+    # 将渲染的模板从 index.html 改为 workbench.html
+    return render_template('workbench.html')
 
 @app.route('/run_stereo', methods=['POST'])
 def run_stereo_endpoint():
