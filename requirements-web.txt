@@ -1,0 +1,8 @@
+# requirements-web.txt
+
+# 包含所有核心依赖
+-r requirements.txt
+
+# 添加 Web 框架和相关库
+Flask
+Pillow
