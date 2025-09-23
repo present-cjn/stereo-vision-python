@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双目立体视觉 Web 应用</title>
+    <!-- 引入 Bootstrap CSS 使界面更美观 -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding: 30px; background-color: #f8f9fa; }
+        .container { max-width: 800px; background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #result-image { max-width: 100%; border: 1px solid #dee2e6; border-radius: 5px; margin-top: 15px;}
+        .spinner-border { width: 3rem; height: 3rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center">
+            <h1 class="mb-4">双目立体视觉在线重建</h1>
+            <p class="text-muted">请上传一对左右视图的图片，系统将为您生成深度图。</p>
+        </div>
+
+        <form id="upload-form" class="mt-5">
+            <div class="form-group">
+                <label for="left_image"><b>第一步: 上传左相机图像</b></label>
+                <input type="file" class="form-control-file" id="left_image" name="left_image" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="right_image"><b>第二步: 上传右相机图像</b></label>
+                <input type="file" class="form-control-file" id="right_image" name="right_image" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block py-2 mt-4"><b>第三步: 开始重建</b></button>
+        </form>
+
+        <div id="status-container" class="text-center mt-4" style="display:none;">
+            <div id="spinner" class="spinner-border text-primary" role="status">
+                <span class="sr-only">处理中...</span>
+            </div>
+            <p id="status-text" class="mt-2">正在处理图像，请稍候...</p>
+        </div>
+
+        <div id="result-container" class="text-center mt-5" style="display:none;">
+            <h3 class="mb-3">重建结果：交互式深度图</h3>
+            <img id="result-image" src="" alt="结果图像">
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript 逻辑：负责与后端 API 通信 ---
+
+        const form = document.getElementById('upload-form');
+        const statusContainer = document.getElementById('status-container');
+        const statusText = document.getElementById('status-text');
+        const resultContainer = document.getElementById('result-container');
+        const resultImage = document.getElementById('result-image');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // 阻止表单默认的页面刷新行为
+
+            // 显示加载动画
+            statusContainer.style.display = 'block';
+            statusText.innerText = '正在上传并处理图像，请稍候...';
+            resultContainer.style.display = 'none';
+
+            // 使用 FormData 来打包文件
+            const formData = new FormData();
+            formData.append('left_image', document.getElementById('left_image').files[0]);
+            formData.append('right_image', document.getElementById('right_image').files[0]);
+
+            try {
+                // 发送异步 POST 请求到后端的 /run_stereo 接口
+                const response = await fetch('/run_stereo', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 如果成功，更新结果图片并显示
+                    statusText.innerText = '处理完成！';
+                    // 使用时间戳防止浏览器缓存旧图片
+                    resultImage.src = data.result_image + '?t=' + new Date().getTime();
+                    resultContainer.style.display = 'block';
+                } else {
+                    // 如果失败，弹出错误提示
+                    throw new Error(data.error || '未知错误');
+                }
+            } catch (error) {
+                statusText.innerText = '发生错误';
+                alert('处理失败: ' + error.message);
+            } finally {
+                // 隐藏加载动画的一部分
+                document.getElementById('spinner').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
