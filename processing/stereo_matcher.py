@@ -5,23 +5,35 @@ import config
 
 
 class StereoMatcher:
-    def __init__(self):
+    def __init__(self,
+                 minDisparity=config.SGBM_MIN_DISPARITY,
+                 numDisparities=config.SGBM_NUM_DISPARITIES,
+                 blockSize=config.SGBM_BLOCK_SIZE,
+                 P1=config.SGBM_P1,
+                 P2=config.SGBM_P2,
+                 disp12MaxDiff=config.SGBM_DISP12_MAX_DIFF,
+                 preFilterCap=config.SGBM_PRE_FILTER_CAP,
+                 uniquenessRatio=config.SGBM_UNIQUENESS_RATIO,
+                 speckleWindowSize=config.SGBM_SPECKLE_WINDOW_SIZE,
+                 speckleRange=config.SGBM_SPECKLE_RANGE,
+                 mode=config.SGBM_MODE):
         """
-        初始化SGBM匹配器，并从config加载参数。
+        [升级版] 初始化SGBM匹配器。
+        这个构造函数接收所有SGBM参数，并使用config.py中的值作为默认值。
         """
-        print("Initializing Stereo SGBM Matcher...")
+        print("Initializing Stereo SGBM Matcher with dynamic parameters...")
         self.matcher = cv2.StereoSGBM_create(
-            minDisparity=config.SGBM_MIN_DISPARITY,
-            numDisparities=config.SGBM_NUM_DISPARITIES,
-            blockSize=config.SGBM_BLOCK_SIZE,
-            P1=config.SGBM_P1,
-            P2=config.SGBM_P2,
-            disp12MaxDiff=config.SGBM_DISP12_MAX_DIFF,
-            preFilterCap=config.SGBM_PRE_FILTER_CAP,
-            uniquenessRatio=config.SGBM_UNIQUENESS_RATIO,
-            speckleWindowSize=config.SGBM_SPECKLE_WINDOW_SIZE,
-            speckleRange=config.SGBM_SPECKLE_RANGE,
-            mode=config.SGBM_MODE
+            minDisparity=minDisparity,
+            numDisparities=numDisparities,
+            blockSize=blockSize,
+            P1=P1,
+            P2=P2,
+            disp12MaxDiff=disp12MaxDiff,
+            preFilterCap=preFilterCap,
+            uniquenessRatio=uniquenessRatio,
+            speckleWindowSize=speckleWindowSize,
+            speckleRange=speckleRange,
+            mode=mode
         )
 
     def compute_disparity(self, left_rectified_img, right_rectified_img):
