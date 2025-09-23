@@ -33,13 +33,17 @@ def index():
     # 将渲染的模板从 index.html 改为 workbench.html
     return render_template('workbench.html')
 
-@app.route('/run_stereo', methods=['POST'])
-def run_stereo_endpoint():
+
+# 2. 用下面的函数替换掉旧的 /run_stereo
+@app.route('/upload_images', methods=['POST'])
+def upload_images_endpoint():
     """
-    接收左右图像和标定文件，启动后台重建任务。
+    接收用户上传的左图、右图和标定文件，
+    为本次任务创建一个唯一的文件夹，并保存文件。
+    返回图片的公共URL和任务ID，用于后续步骤。
     """
     try:
-        # 1. 检查文件是否都已上传
+        # 检查文件是否都已上传
         if 'left_image' not in request.files or 'right_image' not in request.files or 'params_file' not in request.files:
             return jsonify({'error': '文件上传不完整：需要左图像、右图像和标定文件'}), 400
 
@@ -50,14 +54,15 @@ def run_stereo_endpoint():
         if left_file.filename == '' or right_file.filename == '' or params_file.filename == '':
             return jsonify({'error': '有文件未选择'}), 400
 
+        # 为这次任务创建一个唯一的ID和文件夹
+        task_id = str(uuid.uuid4())
+        task_folder = os.path.join(app.config['UPLOAD_FOLDER'], task_id)
+        os.makedirs(task_folder, exist_ok=True)
+
+        # 保存文件
         left_filename = secure_filename(left_file.filename)
         right_filename = secure_filename(right_file.filename)
         params_filename = secure_filename(params_file.filename)
-
-        # 2. 为每次请求创建一个唯一的文件夹来存放上传的文件
-        task_id_folder = str(uuid.uuid4())
-        task_folder = os.path.join(app.config['UPLOAD_FOLDER'], task_id_folder)
-        os.makedirs(task_folder, exist_ok=True)
 
         left_path = os.path.join(task_folder, left_filename)
         right_path = os.path.join(task_folder, right_filename)
@@ -67,20 +72,20 @@ def run_stereo_endpoint():
         right_file.save(right_path)
         params_file.save(params_path)
 
-        # 3. 启动后台任务时，传入标定文件的路径
-        task = run_stereo_reconstruction_task.delay(left_path, right_path, params_path)
+        # 构建前端可以访问的公共URL
+        left_image_url = url_for('static', filename=f'uploads/{task_id}/{left_filename}')
+        right_image_url = url_for('static', filename=f'uploads/{task_id}/{right_filename}')
 
+        # 返回成功信息
         return jsonify({
-            'task_id': task.id,
-            'status_url': url_for('get_task_status', task_id=task.id)
+            'message': '文件上传成功!',
+            'task_id': task_id,
+            'left_image_url': left_image_url,
+            'right_image_url': right_image_url
         })
 
     except Exception as e:
-        # 打印详细错误到后台日志，方便调试
-        print(f"Error in /run_stereo: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': '服务器内部错误，请检查后台日志。'}), 500
+        return jsonify({'error': f'服务器内部错误: {str(e)}'}), 500
 
 
 @app.route('/status/<task_id>')
