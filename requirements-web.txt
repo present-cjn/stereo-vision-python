@@ -3,6 +3,11 @@
 # 包含所有核心依赖
 -r requirements.txt
 
-# 添加 Web 框架和相关库
-Flask
+# 然后，安装GUI和Web所需的额外库
 Pillow
+Flask
+Werkzeug
+
+# 为异步任务队列添加的新依赖
+celery
+redis
