@@ -7,3 +7,6 @@ __pycache__/
 # environment
 venv/
 *.pyc
+
+# 忽略Web应用的用户上传内容
+/web_app/static/uploads/
