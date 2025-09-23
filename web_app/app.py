@@ -6,12 +6,19 @@ from .tasks import run_stereo_reconstruction_task, run_calibration_task
 from celery.result import AsyncResult
 from .celery_app import celery_app  # 导入celery_app实例
 import uuid
+import numpy as np
+import cv2
 
 # --- 关键的路径设置 ---
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 # --------------------
+import config
+from utils import file_utils, image_utils
+from processing.stereo_matcher import StereoMatcher
+from processing.reconstructor import Reconstructor
+
 
 # 初始化 Flask 应用
 app = Flask(__name__, static_folder='static')
@@ -86,6 +93,65 @@ def upload_images_endpoint():
 
     except Exception as e:
         return jsonify({'error': f'服务器内部错误: {str(e)}'}), 500
+
+
+# 2. 添加这个全新的函数
+@app.route('/rectify_images', methods=['POST'])
+def rectify_images_endpoint():
+    """
+    接收任务ID，执行立体校正，并返回校正后图像的URL。
+    """
+    try:
+        data = request.get_json()
+        task_id = data.get('task_id')
+        if not task_id:
+            return jsonify({'error': '缺少任务ID'}), 400
+
+        task_folder = os.path.join(app.config['UPLOAD_FOLDER'], task_id)
+
+        # --- 1. 定位文件路径 ---
+        # (一个更健壮的设计会在这里查找文件名，但为简化，我们假设文件名已知)
+        left_path = next(
+            (os.path.join(task_folder, f) for f in os.listdir(task_folder) if f.lower().startswith('left')), None)
+        right_path = next(
+            (os.path.join(task_folder, f) for f in os.listdir(task_folder) if f.lower().startswith('right')), None)
+        params_path = next(
+            (os.path.join(task_folder, f) for f in os.listdir(task_folder) if f.lower().endswith(('.yml', '.yaml'))),
+            None)
+
+        if not all([left_path, right_path, params_path]):
+            return jsonify({'error': '任务文件夹中文件不完整'}), 400
+
+        # --- 2. 加载数据并执行校正 ---
+        left_img = cv2.imread(left_path)
+        right_img = cv2.imread(right_path)
+        stereo_params = file_utils.load_stereo_params(params_path)
+
+        left_rectified, right_rectified, Q = image_utils.rectify_stereo_pair(left_img, right_img, stereo_params)
+
+        # --- 3. 保存结果 ---
+        left_rect_filename = f"left_rectified.png"
+        right_rect_filename = f"right_rectified.png"
+        left_rect_path = os.path.join(task_folder, left_rect_filename)
+        right_rect_path = os.path.join(task_folder, right_rect_filename)
+        q_matrix_path = os.path.join(task_folder, "Q.npy")
+
+        cv2.imwrite(left_rect_path, left_rectified)
+        cv2.imwrite(right_rect_path, right_rectified)
+        np.save(q_matrix_path, Q)  # 将Q矩阵保存为numpy二进制文件
+
+        # --- 4. 返回新图片的URL ---
+        left_rect_url = url_for('static', filename=f'uploads/{task_id}/{left_rect_filename}')
+        right_rect_url = url_for('static', filename=f'uploads/{task_id}/{right_rect_filename}')
+
+        return jsonify({
+            'message': '立体校正成功!',
+            'left_rectified_url': left_rect_url,
+            'right_rectified_url': right_rect_url
+        })
+
+    except Exception as e:
+        return jsonify({'error': f'校正过程中发生错误: {str(e)}'}), 500
 
 
 @app.route('/status/<task_id>')
