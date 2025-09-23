@@ -1,70 +1,96 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('upload-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const spinner = submitBtn.querySelector('.spinner-border');
+    // --- 获取所有UI元素 ---
+    const recoForm = document.getElementById('reco-form');
+    const calibForm = document.getElementById('calib-form');
+    const recoSubmitBtn = document.getElementById('reco-submit-btn');
+    const calibSubmitBtn = document.getElementById('calib-submit-btn');
+
     const statusContainer = document.getElementById('status-container');
     const statusMessage = document.getElementById('status-message');
     const progressBar = document.getElementById('progress-bar');
     const resultContainer = document.getElementById('result-container');
-    const resultImage = document.getElementById('result-image');
     const errorContainer = document.getElementById('error-container');
 
-    form.addEventListener('submit', async (e) => {
+    // --- 为重建表单绑定事件 ---
+    recoForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        const formData = new FormData(recoForm);
+        startTask('/run_stereo', formData, recoSubmitBtn, handleRecoResult);
+    });
+
+    // --- 为标定表单绑定事件 ---
+    calibForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(calibForm);
+        startTask('/start_calibration', formData, calibSubmitBtn, handleCalibResult);
+    });
+
+    async function startTask(url, formData, submitBtn, resultHandler) {
+        const spinner = submitBtn.querySelector('.spinner-border') || document.createElement('span');
 
         // --- 重置UI ---
         submitBtn.disabled = true;
-        spinner.classList.remove('d-none');
+        if (spinner) spinner.classList.remove('d-none');
         statusContainer.classList.remove('d-none');
         resultContainer.classList.add('d-none');
         errorContainer.classList.add('d-none');
-        updateProgress(0, "正在上传图像...");
-
-        const formData = new FormData(form);
+        updateProgress(0, "正在上传文件...");
 
         try {
-            // --- 1. 提交任务 ---
-            const response = await fetch('/run_stereo', {
-                method: 'POST',
-                body: formData
-            });
-
+            const response = await fetch(url, { method: 'POST', body: formData });
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || '上传失败');
+                throw new Error(errorData.error || '请求失败');
             }
-
             const data = await response.json();
-            const statusUrl = data.status_url;
-
-            // --- 2. 开始轮询任务状态 ---
-            pollStatus(statusUrl);
-
+            pollStatus(data.status_url, submitBtn, resultHandler);
         } catch (error) {
-            showError(error.message);
+            showError(error.message, submitBtn);
         }
-    });
+    }
 
-    function pollStatus(statusUrl) {
+    function pollStatus(statusUrl, submitBtn, resultHandler) {
         const interval = setInterval(async () => {
             try {
                 const response = await fetch(statusUrl);
                 const data = await response.json();
-
                 updateProgress(data.progress, data.status);
 
                 if (data.state === 'SUCCESS') {
                     clearInterval(interval);
-                    showResult(data.result.result_image);
+                    resultHandler(data.result);
+                    resetSubmitBtn(submitBtn);
                 } else if (data.state === 'FAILURE') {
                     clearInterval(interval);
-                    showError(`任务失败: ${data.status}`);
+                    showError(`任务失败: ${data.status}`, submitBtn);
                 }
             } catch (error) {
                 clearInterval(interval);
-                showError('轮询状态时发生网络错误');
+                showError('轮询状态时发生网络错误', submitBtn);
             }
-        }, 2000); // 每2秒查询一次
+        }, 2000);
+    }
+
+    function handleRecoResult(result) {
+        resultContainer.innerHTML = `
+            <h2 class="mb-4">重建结果：深度图</h2>
+            <div class="result-container d-flex justify-content-center align-items-center bg-light border rounded">
+                <img src="${result.result_image}" alt="结果图像" class="img-fluid">
+            </div>`;
+        resultContainer.classList.remove('d-none');
+    }
+
+    function handleCalibResult(result) {
+        resultContainer.innerHTML = `
+            <h2 class="mb-4">标定结果</h2>
+            <div class="alert alert-success">
+                <h4 class="alert-heading">标定成功！</h4>
+                <p>双目相机的几何参数已成功计算并保存。</p>
+                <hr>
+                <p class="mb-0"><strong>最终重投影误差: ${result.reprojection_error}</strong> (一个好的标定结果此值应小于1.0)</p>
+                <a href="${result.download_url}" class="btn btn-info mt-3">下载标定文件 (stereo_params.yml)</a>
+            </div>`;
+        resultContainer.classList.remove('d-none');
     }
 
     function updateProgress(progress, message) {
@@ -74,18 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
         progressBar.textContent = `${progress}%`;
     }
 
-    function showResult(imageUrl) {
-        resultContainer.classList.remove('d-none');
-        resultImage.src = imageUrl;
-        submitBtn.disabled = false;
-        spinner.classList.add('d-none');
-    }
-
-    function showError(message) {
+    function showError(message, submitBtn) {
         errorContainer.textContent = message;
         errorContainer.classList.remove('d-none');
         statusContainer.classList.add('d-none');
+        resetSubmitBtn(submitBtn);
+    }
+
+    function resetSubmitBtn(submitBtn) {
+        const spinner = submitBtn.querySelector('.spinner-border');
         submitBtn.disabled = false;
-        spinner.classList.add('d-none');
+        if(spinner) spinner.classList.add('d-none');
     }
 });

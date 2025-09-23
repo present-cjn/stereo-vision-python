@@ -16,19 +16,20 @@ from utils import file_utils, image_utils
 from processing.stereo_matcher import StereoMatcher
 from processing.reconstructor import Reconstructor
 
+
 @celery_app.task(bind=True)
-def run_stereo_reconstruction_task(self, left_path, right_path):
+def run_stereo_reconstruction_task(self, left_path, right_path, params_path):
     """
-    这是一个 Celery 后台任务。
-    它包含了所有耗时的计算逻辑。
-    `bind=True` 允许我们访问 `self` 来更新任务状态。
+    接收左右图像和标定文件路径，执行后台重建任务。
     """
     try:
         # --- 1. 更新初始状态 ---
         self.update_state(state='PROGRESS', meta={'status': '加载标定参数...', 'progress': 10})
-        stereo_params = file_utils.load_stereo_params(config.CAMERA_PARAMS_PATH)
+
+        # --- 核心修改：从用户上传的指定路径加载参数 ---
+        stereo_params = file_utils.load_stereo_params(params_path)
         if stereo_params is None:
-            raise ValueError('相机标定文件未找到!')
+            raise ValueError(f'无法从 {os.path.basename(params_path)} 加载或解析标定参数!')
 
         # --- 2. 读取图像 ---
         self.update_state(state='PROGRESS', meta={'status': '读取图像...', 'progress': 20})
@@ -48,10 +49,14 @@ def run_stereo_reconstruction_task(self, left_path, right_path):
 
         # --- 5. 生成结果图像 ---
         self.update_state(state='PROGRESS', meta={'status': '生成结果图像...', 'progress': 80})
-        disp_to_show = cv2.normalize((disparity_map.astype(np.float32) / 16.0 - config.SGBM_MIN_DISPARITY) / config.SGBM_NUM_DISPARITIES, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        disp_to_show = cv2.normalize(
+            (disparity_map.astype(np.float32) / 16.0 - config.SGBM_MIN_DISPARITY) / config.SGBM_NUM_DISPARITIES, None,
+            alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         colormap_disp = cv2.applyColorMap(disp_to_show, cv2.COLORMAP_JET)
 
-        result_filename = f"result_{os.path.basename(left_path)}"
+        # 为结果文件创建一个唯一的名称，避免浏览器缓存问题
+        unique_id = os.path.basename(os.path.dirname(left_path))
+        result_filename = f"result_{unique_id}.png"
         result_folder = os.path.join(PROJECT_ROOT, 'web_app', 'static', 'results')
         result_path = os.path.join(result_folder, result_filename)
         cv2.imwrite(result_path, colormap_disp)
@@ -60,7 +65,56 @@ def run_stereo_reconstruction_task(self, left_path, right_path):
         result_image_url = f'/static/results/{result_filename}'
         return {'status': '任务完成!', 'progress': 100, 'result_image': result_image_url}
 
+    except Exception as e:
+        # 重新抛出异常，让 Celery 自动处理失败状态
+        raise
+
+# 导入 StereoCalibrator
+from calibration.calibrator import StereoCalibrator
+
+
+@celery_app.task(bind=True)
+def run_calibration_task(self, image_dir, chessboard_size_str, square_size_mm):
+    """
+    后台执行相机标定任务。
+    """
+    try:
+        # --- 1. 解析参数 ---
+        self.update_state(state='PROGRESS', meta={'status': '解析参数...', 'progress': 5})
+        try:
+            width, height = map(int, chessboard_size_str.split(','))
+            chessboard_size = (width, height)
+        except ValueError:
+            raise ValueError(f"内角点数格式错误: '{chessboard_size_str}'")
+
+        # --- 2. 实例化并运行标定器 ---
+        # 我们可以通过更新状态来报告进度，但标定器本身没有分步进度
+        self.update_state(state='PROGRESS', meta={'status': '正在进行标定计算，请耐心等待...', 'progress': 20})
+
+        calibrator = StereoCalibrator(
+            chessboard_size=chessboard_size,
+            square_size=float(square_size_mm)
+        )
+        # 标定器会使用 config.CALIBRATION_IMAGE_DIR，我们需要确保上传的文件在那里
+        # 注意：为了简化，我们让Web上传的图片也保存到这个公共目录
+        stereo_params = calibrator.run(image_dir)
+
+        if stereo_params is None:
+            raise RuntimeError("标定失败，请检查图像质量或参数。")
+
+        # --- 3. 任务成功 ---
+        self.update_state(state='PROGRESS', meta={'status': '标定成功，正在生成结果...', 'progress': 90})
+
+        reprojection_error = stereo_params.get('reprojection_error', 'N/A')
+
+        # 返回结果：成功信息、误差和一个下载链接
+        return {
+            'status': '标定成功!',
+            'progress': 100,
+            'reprojection_error': f"{reprojection_error:.4f}",
+            'download_url': '/download_params'  # 我们需要创建一个新的端点来处理下载
+        }
 
     except Exception as e:
-        # --- 任务失败 ---
+        self.update_state(state='FAILURE', meta={'status': str(e), 'progress': 0})
         raise

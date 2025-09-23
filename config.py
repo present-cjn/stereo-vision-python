@@ -23,6 +23,7 @@ POINT_CLOUD_PATH = os.path.join(OUTPUT_DIR, "point_cloud.ply")
 CHESSBOARD_SIZE = (8, 11)  # (内角点数量 a, 内角点数量 b)
 SQUARE_SIZE_MM = 12        # 棋盘格尺寸（毫米）
 # IMAGE_SIZE = (640, 480)    # 图片分辨率
+CALIBRATION_IMAGE_SIZE = (640, 480)
 
 # --- Runtime Control Flags ---
 # 显示详细过程内容，设置为True表示显示
